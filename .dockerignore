@@ -1,0 +1,9 @@
+app/node_modules
+app/dist
+backend/.venv
+**/__pycache__
+**/*.pyc
+systemd
+*.md
+LICENSE
+.git

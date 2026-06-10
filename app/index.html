@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pdf2x4 — Druck-PDF zu PDF/X-4 (im Browser, ohne Upload)</title>
+<meta name="description" content="Wandle dein Druck-PDF im Browser in eine PDF/X-4-konforme Datei (FOGRA39/47) um. Keine Daten verlassen deinen Browser.">
+<style>
+  :root[data-theme="dark"]{
+    --bg:#0f1419; --panel:#1a212b; --panel2:#222c39; --line:#2d3a4a;
+    --ink:#e8edf2; --mut:#9fb0c0; --accent:#3da9fc; --accent2:#2b8be0; --on-accent:#06243b;
+    --ok:#3ecf8e; --bad:#ff6b6b;
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f6f9; --panel:#ffffff; --panel2:#eef2f7; --line:#d8e0ea;
+    --ink:#16202b; --mut:#5a6b7b; --accent:#1f7ae0; --accent2:#1763bd; --on-accent:#ffffff;
+    --ok:#1a9e6a; --bad:#d23b3b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+  a{color:var(--accent)}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0}
+  .logo{height:46px;color:var(--ink)}
+  .theme-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 12px;cursor:pointer;font-size:14px;display:inline-flex;gap:7px;align-items:center}
+  .theme-btn:hover{border-color:var(--accent)}
+  header.top{padding:18px 0 4px;text-align:center}
+  header.top p.tag{color:var(--mut);font-size:18px;margin:10px auto 0;max-width:640px}
+  .privacy{display:inline-block;margin-top:12px;font-size:13px;color:var(--ok);border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 14px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;margin:22px 0}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;cursor:pointer;transition:.15s;background:var(--panel2)}
+  .drop:hover,.drop.over{border-color:var(--accent)}
+  .drop .big{font-size:18px;font-weight:600}
+  .drop .sub{color:var(--mut);font-size:14px;margin-top:6px}
+  .drop .file{margin-top:12px;color:var(--accent);font-weight:600;word-break:break-all}
+
+  .jsonbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:14px;color:var(--mut)}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+  .opts .full{grid-column:1/-1}
+  label.field{display:block;font-size:13px;color:var(--mut);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  input[type=text],input[type=number],select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 12px;font-size:15px}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .checkrow{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:14px;margin-top:4px}
+  .hint{font-size:13px;color:var(--mut);margin-top:6px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:14px 22px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;width:100%}
+  .btn:hover{background:var(--accent2)} .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.secondary{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  .btn.small{width:auto;padding:9px 14px;font-size:14px}
+
+  #status{margin-top:18px}
+  .spinner{width:18px;height:18px;border:3px solid color-mix(in srgb,var(--on-accent) 35%,transparent);border-top-color:var(--on-accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .report{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}
+  .report.passed h3{color:var(--ok)} .report.failed h3{color:var(--bad)}
+  .check{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:15px}
+  .check .ic{font-weight:800;width:18px;flex:0 0 18px} .check .ic.ok{color:var(--ok)} .check .ic.no{color:var(--bad)}
+  .check .det{color:var(--mut);font-size:13px}
+  .err{background:color-mix(in srgb,var(--bad) 16%,var(--panel));border:1px solid var(--bad);color:var(--ink);border-radius:10px;padding:14px;margin-top:16px;font-size:14px;white-space:pre-wrap}
+
+  h2{font-size:22px;margin:0 0 10px} h3{margin:0 0 12px;font-size:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .mini{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .mini b{color:var(--ink)}
+  ol.steps{margin:0;padding-left:20px} ol.steps li{margin:7px 0}
+  .muted{color:var(--mut)}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 50px;color:var(--mut);font-size:13px;text-align:center}
+  footer a{color:var(--mut);text-decoration:underline}
+  .agpl{max-width:640px;margin:0 auto 14px}
+  @media(max-width:680px){.opts,.grid2{grid-template-columns:1fr}.row3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <!-- Logo: PDF →(2) X4 -->
+    <svg class="logo" viewBox="0 0 214 56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="pdf2x4">
+      <text x="0" y="40" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="800" fill="currentColor">PDF</text>
+      <text x="100" y="17" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800" text-anchor="middle" fill="var(--accent)">2</text>
+      <line x1="80" y1="32" x2="118" y2="32" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+      <polyline points="109,24 120,32 109,40" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="130" y="9" width="84" height="40" rx="9" fill="var(--accent)"/>
+      <text x="172" y="38" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="800" text-anchor="middle" fill="var(--on-accent)">X4</text>
+    </svg>
+    <button class="theme-btn" id="themeBtn" title="Hell/Dunkel umschalten"><span id="themeIcon">🌙</span> <span id="themeLabel">Dunkel</span></button>
+  </div>
+
+  <header class="top">
+    <p class="tag">Wandle dein Druck-PDF in eine <b>PDF/X-4-konforme</b> Datei für die Druckerei um.</p>
+    <div class="privacy">🔒 Läuft komplett im Browser — deine Datei wird nicht hochgeladen.</div>
+  </header>
+</div>
+
+<main class="wrap">
+  <section class="card" id="tool">
+    <h2>PDF auswählen</h2>
+    <div class="drop" id="drop">
+      <div class="big">PDF hierher ziehen oder klicken</div>
+      <div class="sub">Dein Druck-PDF (sRGB, Schriften eingebettet) · bleibt lokal im Browser</div>
+      <div class="file" id="fileName"></div>
+      <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    </div>
+
+    <div class="jsonbar">
+      <span>Einstellungen aus md2bookpdf?</span>
+      <label class="btn secondary small">Einstellungs-JSON laden
+        <input type="file" id="jsonInput" accept="application/json,.json" hidden>
+      </label>
+      <span id="jsonInfo"></span>
+    </div>
+
+    <div class="opts">
+      <div>
+        <label class="field" for="title">Titel (Metadaten)</label>
+        <input type="text" id="title" placeholder="sonst aus dem Dateinamen">
+      </div>
+      <div>
+        <label class="field" for="author">Autor</label>
+        <input type="text" id="author" placeholder="optional">
+      </div>
+      <div>
+        <label class="field" for="condition">Ausgabebedingung (Output-Intent)</label>
+        <select id="condition">
+          <option value="FOGRA39">Gestrichen — ISO Coated v2 (FOGRA39)</option>
+          <option value="FOGRA47">Ungestrichen — PSO Uncoated v3 (FOGRA47)</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="intent">Rendering-Intent</label>
+        <select id="intent">
+          <option value="relative">Relativ farbmetrisch (Standard)</option>
+          <option value="perceptual">Perzeptiv (bildlastige Bücher)</option>
+        </select>
+      </div>
+      <div class="full">
+        <div class="row3">
+          <div><label class="field" for="bleed">Anschnitt (mm)</label><input type="number" id="bleed" value="0" min="0" step="0.5"></div>
+          <div><label class="field" for="width">Trim-Breite (mm)</label><input type="number" id="width" value="148" min="1" step="0.1" disabled></div>
+          <div><label class="field" for="height">Trim-Höhe (mm)</label><input type="number" id="height" value="210" min="1" step="0.1" disabled></div>
+        </div>
+        <label class="checkrow"><input type="checkbox" id="crop"> Schnittmarken sind im PDF vorhanden</label>
+        <div class="hint">Anschnitt = 0 (Standard): Seitengröße = Endformat (TrimBox). Erst bei Anschnitt &gt; 0 werden Trim-Breite/-Höhe gebraucht.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px"><button class="btn" id="go" disabled>In PDF/X-4 umwandeln</button></div>
+    <div id="status"></div>
+  </section>
+
+  <section class="card">
+    <h2>Was ist PDF/X-4 — und warum will die Druckerei das?</h2>
+    <p class="muted">PDF/X-4 (ISO&nbsp;15930-7) ist ein genormtes, druckverbindliches PDF-Format. Eine X-4-konforme Datei garantiert der Druckerei, dass alles Nötige enthalten ist und nichts Störendes drin steckt.</p>
+    <div class="grid2" style="margin-top:14px">
+      <div class="mini"><b>Was pdf2x4 setzt</b>
+        <ul style="margin:8px 0 0;padding-left:18px">
+          <li>Farbe nach <b>CMYK</b> umgerechnet</li>
+          <li><b>Output-Intent</b> mit eingebettetem ICC (FOGRA39/47)</li>
+          <li><b>Alle Schriften eingebettet</b></li>
+          <li>TrimBox/BleedBox, PDF&nbsp;1.6, konsistente Metadaten</li>
+          <li>Links/Formulare/JavaScript entfernt</li>
+        </ul>
+      </div>
+      <div class="mini"><b>Datenschutz</b>
+        <p class="muted" style="margin:8px 0 0">Die Umwandlung läuft per WebAssembly <b>vollständig in deinem Browser</b>. Deine PDF wird zu keinem Zeitpunkt hochgeladen. Für besonders heikle Aufträge zusätzlich im Acrobat-Preflight prüfen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Wie muss das Eingabe-PDF aussehen?</h2>
+    <ol class="steps">
+      <li>Ein normales <b>Druck-PDF</b> mit <b>eingebetteten Schriften</b> (sRGB ist ok — CMYK macht pdf2x4).</li>
+      <li>Die <b>Seitengröße</b> = Endformat (bzw. inkl. Anschnitt, dann „Anschnitt“ setzen).</li>
+      <li>Noch kein Buch-PDF? Erstelle es aus Markdown mit <a href="https://md2bookpdf.services.gutermann.gmbh" target="_blank" rel="noopener"><b>md2bookpdf</b></a> — dort kannst du auch die Einstellungs-JSON für hier exportieren.</li>
+    </ol>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p class="agpl">pdf2x4 verarbeitet deine Datei ausschließlich lokal in deinem Browser. Es werden keine Dateien oder Daten an einen Server gesendet.</p>
+  <p>Open Source unter <b>AGPL-3.0</b> ·
+    <a href="https://github.com/gutermannxyz/pdf2x4" target="_blank" rel="noopener">Quellcode</a> ·
+    Farbumrechnung mit <a href="https://ghostscript.com" target="_blank" rel="noopener">Ghostscript</a> (AGPL, als WebAssembly) ·
+    <a href="https://md2bookpdf.services.gutermann.gmbh" target="_blank" rel="noopener">md2bookpdf</a>
+  </p>
+</div></footer>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

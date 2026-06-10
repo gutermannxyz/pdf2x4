@@ -1,0 +1,10 @@
+services:
+  pdf2x4:
+    build: .
+    image: pdf2x4:latest
+    container_name: pdf2x4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8011:80"
+    security_opt:
+      - no-new-privileges:true

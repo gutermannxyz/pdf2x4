@@ -1,0 +1,21 @@
+# --- In /etc/caddy/Caddyfile einfügen (eigener Block, wie die anderen *.gutermann.one) ---
+
+pdf2x4.services.gutermann.gmbh {
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
+
+    # Buch-PDFs können groß sein
+    request_body {
+        max_size 130MB
+    }
+
+    reverse_proxy 127.0.0.1:8011
+}

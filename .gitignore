@@ -1,0 +1,10 @@
+# Abhängigkeiten / Build-Artefakte
+app/node_modules/
+app/dist/
+backend/.venv/
+**/__pycache__/
+*.pyc
+
+# OS / Editor
+.DS_Store
+*.swp

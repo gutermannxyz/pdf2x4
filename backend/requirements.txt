@@ -1,0 +1,3 @@
+# Nur für das optionale CLI-Werkzeug backend/pdfx4.py (Batch/Server-seitig).
+# Die Web-App (app/) braucht das NICHT — sie läuft komplett im Browser.
+pikepdf>=8.0
